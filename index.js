@@ -116,11 +116,11 @@ app.post('/feedback', async (req, res) => {
   
   app.post('/add-book', async (req, res) => {
     try {
-      const { title, author, user_id,book_link,book_description} = req.body;
+      const { title, author, user_id,book_link,book_description,book_format} = req.body;
   
       // Insert book into the database
       const connection = await pool.getConnection();
-      await connection.query('INSERT INTO books (title, author,user_id,book_link,book_description) VALUES (?, ?,?,?,?)', [title, author,user_id,book_link,book_description]);
+      await connection.query('INSERT INTO books (title, author,user_id,book_link,book_description,book_format) VALUES (?, ?,?,?,?,?)', [title, author,user_id,book_link,book_description,book_format]);
       connection.release();
   
       res.status(201).json({ message: 'Book added successfully',success:true });
@@ -147,11 +147,13 @@ app.post('/feedback', async (req, res) => {
     }
   });
   
-  app.get('/audio-books', async (req, res) => {
+  app.get('/audio-books/:user_id', async (req, res) => {
     try {
       // Fetch all books from the database
+      const user_id = req.params.user_id;
+
       const connection = await pool.getConnection();
-      const [rows, fields] = await connection.query('SELECT * FROM books where book_format=1');
+      const [rows, fields] = await connection.query('SELECT * FROM books where book_format=1 and user_id=?',[user_id]);
       connection.release();
   
       res.status(200).json({ success:true,message:'Audio books retrived succsfully',books: rows });
@@ -160,14 +162,18 @@ app.post('/feedback', async (req, res) => {
       res.status(500).json({ error: 'Error getting books' });
     }
   });
-  app.get('/text-books', async (req, res) => {
+  app.get('/text-books/:user_id', async (req, res) => {
     try {
       // Fetch all books from the database
+      const user_id = req.params.user_id;
+      console.log(req.params);
       const connection = await pool.getConnection();
-      const [rows, fields] = await connection.query('SELECT * FROM books where book_format=0');
+      const [rows, fields] = await connection.query('SELECT * FROM books where book_format=0 and user_id=?',[user_id]);
       connection.release();
+      console.log(rows);
+
   
-      res.status(200).json({ success:true,message:'Audio books retrived succsfully',books: rows });
+      res.status(200).json({ success:true,message:'Text books retrived succsfully',books: rows });
     } catch (error) {
       console.error('Error getting books:', error);
       res.status(500).json({ error: 'Error getting books' });
